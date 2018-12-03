@@ -1,0 +1,149 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel MeshToSDFSolid
+#pragma kernel MeshToSDFHollow
+#pragma kernel MeshToSDFLines
+
+#pragma kernel SphereSDF       
+
+StructuredBuffer<float3> VertexBuffer;
+StructuredBuffer<int> IndexBuffer;
+
+RWTexture3D<half> Result;
+int3 dim;
+int tris;
+float scale;
+float lineRadius;
+
+float sdBox(float3 position, float3 dimensions) {
+	float3 d = abs(position) - dimensions;
+
+	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
+
+// from https://github.com/marklundin/glsl-sdf-primitives/blob/master/udTriangle.glsl
+float dot2(in float3 v) { return dot(v, v); }
+float dTriangle(float3 p, float3 a, float3 b, float3 c)
+{
+	float3 ba = b - a; float3 pa = p - a;
+	float3 cb = c - b; float3 pb = p - b;
+	float3 ac = a - c; float3 pc = p - c;
+	float3 nor = cross(ba, ac);
+	float3 to_p = p - ((a + b + c) / 3.0);
+	float dir = dot(to_p, nor);
+	return sign(dir) * sqrt(
+		(sign(dot(cross(ba, nor), pa)) +
+			sign(dot(cross(cb, nor), pb)) +
+			sign(dot(cross(ac, nor), pc)) < 2.0)
+		?
+		min(min(
+			dot2(ba*clamp(dot(ba, pa) / dot2(ba), 0.0, 1.0) - pa),
+			dot2(cb*clamp(dot(cb, pb) / dot2(cb), 0.0, 1.0) - pb)),
+			dot2(ac*clamp(dot(ac, pc) / dot2(ac), 0.0, 1.0) - pc))
+		:
+		dot(nor, pa)*dot(nor, pa) / dot2(nor));
+}
+
+float udTriangle(float3 p, float3 a, float3 b, float3 c)
+{
+	float3 ba = b - a; float3 pa = p - a;
+	float3 cb = c - b; float3 pb = p - b;
+	float3 ac = a - c; float3 pc = p - c;
+	float3 nor = cross(ba, ac);
+	return sqrt(
+		(sign(dot(cross(ba, nor), pa)) +
+			sign(dot(cross(cb, nor), pb)) +
+			sign(dot(cross(ac, nor), pc)) < 2.0)
+		?
+		min(min(
+			dot2(ba*clamp(dot(ba, pa) / dot2(ba), 0.0, 1.0) - pa),
+			dot2(cb*clamp(dot(cb, pb) / dot2(cb), 0.0, 1.0) - pb)),
+			dot2(ac*clamp(dot(ac, pc) / dot2(ac), 0.0, 1.0) - pc))
+		:
+		dot(nor, pa)*dot(nor, pa) / dot2(nor));
+}
+
+float sdCapsule(float3 p, float3 a, float3 b, float r)
+{
+	float3 pa = p - a;
+	float3 ba = b - a;
+	float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+	return length(pa - ba * h) - r;
+}
+
+[numthreads(8, 8, 8)]
+void MeshToSDFLines(uint3 id : SV_DispatchThreadID) {
+	float3 pos = (float3(id) / float3(dim)) * 2.0 - 1.0;
+
+	float d = 100.0;
+	float lr = lineRadius;
+	for (int i = 0; i < tris; i += 3)
+	{
+		float3 a = VertexBuffer[IndexBuffer[i + 0]];
+		float3 b = VertexBuffer[IndexBuffer[i + 1]];
+		float3 c = VertexBuffer[IndexBuffer[i + 2]];
+
+		float dline_ab = sdCapsule(pos, a, b, lr);
+		float dline_bc = sdCapsule(pos, b, c, lr);
+		float dline_ca = sdCapsule(pos, c, a, lr);
+		d = min(d, dline_ab);
+		d = min(d, dline_bc);
+		d = min(d, dline_ca);
+	}
+
+
+	Result[id] = half(d + lineRadius);
+}
+
+[numthreads(8, 8, 8)]
+void MeshToSDFHollow(uint3 id : SV_DispatchThreadID) {
+	float3 pos = (float3(id) / float3(dim)) * 2.0 - 1.0;
+
+	float d = 100.0;
+
+	for (int i = 0; i < tris; i += 3)
+	{
+		float3 a = VertexBuffer[IndexBuffer[i + 0]];
+		float3 b = VertexBuffer[IndexBuffer[i + 1]];
+		float3 c = VertexBuffer[IndexBuffer[i + 2]];
+
+		float dtri = udTriangle(pos, a, b, c);
+		d = min(d, dtri);
+	}
+
+
+	Result[id] = half(d + lineRadius);
+}
+
+
+[numthreads(8, 8, 8)]
+void MeshToSDFSolid(uint3 id : SV_DispatchThreadID) {
+	float3 pos = (float3(id) / float3(dim)) * 2.0 - 1.0;
+
+	float3 a0 = VertexBuffer[IndexBuffer[0]];
+	float3 b0 = VertexBuffer[IndexBuffer[1]];
+	float3 c0 = VertexBuffer[IndexBuffer[2]];
+	float d = dTriangle(pos, a0, b0, c0);
+
+	//float d = -100.0; //length(pos - VertexBuffer[0] * 0.1) - 0.01;
+
+	for (int i = 0; i < tris; i += 3)
+	{
+		float3 a = VertexBuffer[IndexBuffer[i + 0]];
+		float3 b = VertexBuffer[IndexBuffer[i + 1]];
+		float3 c = VertexBuffer[IndexBuffer[i + 2]];
+
+		float dtri = dTriangle(pos, a, b, c);
+		d = max(d, dtri);
+	}
+
+
+	Result[id] = half(d + lineRadius);
+}
+
+[numthreads(8, 8, 8)]
+void SphereSDF(uint3 id : SV_DispatchThreadID) {
+	float3 pos = (float3(id) / float3(dim)) * 2.0 - 1.0;
+	half d = sdBox(pos, float3(1.0, 1.0, 1.0) * 0.5);
+	d = length(pos + float3(0.1, 0.0, 0.0)) - 0.5;
+	Result[id] = d + 0.01;
+}

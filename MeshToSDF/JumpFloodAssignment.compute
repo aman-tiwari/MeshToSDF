@@ -1,0 +1,77 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel JFA
+#pragma kernel Preprocess
+#pragma kernel Postprocess
+#pragma kernel DebugSphere
+
+uint dispatchCubeSide;
+uint samplingOffset;
+half postProcessThickness;
+RWTexture3D<half4> Voxels;
+
+[numthreads(8, 8, 8)]
+void Preprocess(uint3 id : SV_DispatchThreadID) {
+	float isVoxel = Voxels[id].x;
+	Voxels[id] = half4(half(id.x), half(id.y), half(id.z), isVoxel);
+}
+
+void JFAIter(uint offset, uint3 id) {
+	half3 idF = half3(id);
+	half4 closest = Voxels[id];
+	half closestDist = 5000.0f;
+	uint3 bounds = uint3(dispatchCubeSide, dispatchCubeSide, dispatchCubeSide);
+	for (uint i = 0; i < 3; i++) {
+		for (uint j = 0; j < 3; j++) {
+			for (uint k = 0; k < 3; k++) {
+
+				uint3 at = uint3(i - 1, j - 1, k - 1) * offset + id;
+				if (any(at < 0) || any(at >= bounds)) continue;
+				half4 voxel = Voxels[at];
+				// non seed / hasn't seen a seed
+				if (voxel.w == 0.0f) continue;
+				half voxelDist = distance(idF, voxel.xyz);
+				if (voxelDist < closestDist) {
+					closestDist = voxelDist;
+					closest = voxel;
+				}
+			}
+		}
+	}
+	Voxels[id] = closest;
+}
+
+[numthreads(8, 8, 8)]
+void JFA(uint3 id : SV_DispatchThreadID) {
+	JFAIter(samplingOffset, id);
+}
+
+[numthreads(8, 8, 8)]
+void Postprocess(uint3 id : SV_DispatchThreadID) {
+	half3 seedPos = Voxels[id].xyz;
+	half dist = (distance(seedPos, half3(id)) / half(dispatchCubeSide)) - postProcessThickness;
+	Voxels[id] = half4(dist, dist, dist, 1.0);
+}
+
+// more of a shell, really
+[numthreads(8, 8, 8)]
+void DebugSphere(uint3 id : SV_DispatchThreadID) {
+	float3 p = half3(id)/half3(dispatchCubeSide, dispatchCubeSide, dispatchCubeSide);
+	p *= 2; p -= 1;
+	float d = length(p) - 0.5;
+	if (abs(d) <= 0.05f) {
+		Voxels[id] = half4(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else {
+		Voxels[id] = half4(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+
+/*[numthreads(64, 64, 64)]
+void JFA64x64x64(uint3 id : SV_DispatchThreadID) {
+	// offset = n/2;
+	for (uint offset = 32; offset >= 1; offset /= 2) {
+		JFAIter(offset, id);
+		DeviceMemoryBarrierWithGroupSync();
+	}
+}*/

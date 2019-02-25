@@ -1,0 +1,59 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel MeshToVoxel
+#pragma kernel Zero
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+uint tris;
+uint numSamples;
+half scale;
+half3 offset;
+uint voxelSide;
+
+StructuredBuffer<half3> VertexBuffer;
+StructuredBuffer<int> IndexBuffer;
+RWTexture3D<half4> Voxels;
+
+// from https://beta.observablehq.com/@jrus/plastic-sequence
+half2 plastic(half index) {
+	return half2(0.5 + frac(0.7548776662466927 * index), 0.5 + frac(0.5698402909980532 * index));
+}
+
+
+// sample num, triangle basis vectors
+half3 triangleSample(int n, half3 A, half3 B) {
+	half2 s = plastic(half(n));
+	s = s.x + s.y > 1.0 ? 1.0 - s : s;
+	return s.x * A + s.y * B;
+}
+
+[numthreads(8, 8, 8)]
+void Zero(uint3 id : SV_DispatchThreadID) {
+	if (any(id < 0) || any(id > voxelSide)) return;
+	Voxels[id] = half4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+[numthreads(512,1,1)]
+void MeshToVoxel(uint3 id : SV_DispatchThreadID)
+{
+	uint triID = id.x * 3;
+	if (triID >= tris * 3) return;
+	half3 a = VertexBuffer[IndexBuffer[triID + 0]] * scale + offset;
+	half3 b = VertexBuffer[IndexBuffer[triID + 1]] * scale + offset;
+	half3 c = VertexBuffer[IndexBuffer[triID + 2]] * scale + offset;
+	half3 AB = b - a;
+	half3 AC = c - a;
+	half side = half(voxelSide);
+
+	for (int i = 0; i < numSamples; i++) {
+		half2 s = half2(frac(0.7548776662466927 * i), frac(0.5698402909980532 * i));
+		s = s.x + s.y > 1.0 ? 1.0 - s : s;
+		half3 pointOnTri = a + s.x * AB + s.y * AC;
+		half3 scaled = pointOnTri * side;
+		uint3 voxelIdx = uint3(floor(scaled));
+		if (!(any(voxelIdx < 0) || any(voxelIdx >= voxelSide))) {
+			half distFromCenter = 1.0 - length(frac(scaled) - half3(0.5, 0.5, 0.5));
+			Voxels[voxelIdx] = half4(distFromCenter, distFromCenter, distFromCenter, distFromCenter);
+		}
+	}
+}

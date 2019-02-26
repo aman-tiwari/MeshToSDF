@@ -2,6 +2,16 @@
 Convert a mesh to an signed distance field for the VFX Graph in realtime.
 See the `MeshToSDF/Demo.unity` scene to see how to use.
 
+# How to use
+1. Drag the MeshToSDF prefab into your scene.
+2. Either set a mesh for the `Mesh` field or set a `SkinnedMeshRenderer` for the `Skinned Mesh Renderer` field
+3. Enter play-mode and set the offset and scale such that the mesh is placed within the SDF where you want it to be. Copy these values into edit-mode
+4. Outputs:
+    1. **VFX graph output** - set the `Vfx Output` field to a VFX graph and the `Vfx Property` to an exposed Texture3D parameter of the VFX graph
+    2. **Material output** - same as vfx graph output, but with a material
+    3. **Script output** - the SDF is available on the `outputRenderTexture` field of the component. The distance is stored in a RGBAFloat texture, in the RGB channels.
+
+
 # How it works
 1. Convert the triangle mesh into voxels
   1. There are many "correct" ways to do this, for instance by iterating over the voxels that each triangle might intersect with and testing if it does intersect with any of them.
@@ -18,3 +28,4 @@ See the `MeshToSDF/Demo.unity` scene to see how to use.
 * Instead of each thread writing `numSamples` times into the voxel array, spawn `numTriangles * numSamples` threads and each thread writes 1 sample into the array. Maybe this is faster?
 * Try the geometry shader technique. It used to be annoying to do this, but apparently is easier in HDRP.
 * There's no need for the dependency on the VFX graph except for the demo scene.
+*

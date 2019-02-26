@@ -8,7 +8,7 @@ See the `MeshToSDF/Demo.unity` scene to see how to use.
 3. Enter play-mode and set the offset and scale such that the mesh is placed within the SDF where you want it to be. Copy these values into edit-mode
 4. Outputs:
     1. **VFX graph output** - set the `Vfx Output` field to a VFX graph and the `Vfx Property` to an exposed Texture3D parameter of the VFX graph
-    2. **Material output** - same as vfx graph output, but with a material
+    2. **Material output** - same as vfx graph output, but with a material. There's a `Slice Texture 3D` material in the `Editor` folder than can be used to debug the SDF. Put it on a plane and put it in to the Material output property to see a slice of the SDF.
     3. **Script output** - the SDF is available on the `outputRenderTexture` field of the component. The distance is stored in a RGBAFloat texture, in the RGB channels.
 
 

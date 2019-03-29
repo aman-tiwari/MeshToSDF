@@ -5,7 +5,7 @@
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 uint tris;
-uint numSamples;
+int numSamples;
 half scale;
 half3 offset;
 uint voxelSide;

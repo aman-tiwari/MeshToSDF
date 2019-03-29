@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.VFX;
 
+[ExecuteAlways]
 public class MeshToSDF : MonoBehaviour
 {
+    public bool executeInEditMode = false;
+
     public ComputeShader JFAImplementation;
     public ComputeShader MtVImplementation;
 
@@ -25,6 +28,12 @@ public class MeshToSDF : MonoBehaviour
     public VisualEffect vfxOutput;
     public string vfxProperty = "Texture3D";
 
+    // Need to change this when any of the following 
+    // settings are changed in a build
+    // unlikely usecase but we support it :)
+    [HideInInspector]
+    public bool fieldsChanged = true;
+
     [Tooltip("Signed distance field resoluton")]
     public int sdfResolution = 64;
 
@@ -37,6 +46,8 @@ public class MeshToSDF : MonoBehaviour
     [Tooltip("Thicken the signed distance field by this amount")]
     public float postProcessThickness = 0.01f;
 
+    Mesh prevMesh;
+
     // kernel ids
     int JFA;
     int Preprocess;
@@ -45,7 +56,13 @@ public class MeshToSDF : MonoBehaviour
     int MtV;
     int Zero;
 
+#if UNITY_EDITOR
     private void OnValidate() {
+        Awake();
+    }
+#endif
+
+    private void Awake() {
         JFA = JFAImplementation.FindKernel("JFA");
         Preprocess = JFAImplementation.FindKernel("Preprocess");
         Postprocess = JFAImplementation.FindKernel("Postprocess");
@@ -55,18 +72,22 @@ public class MeshToSDF : MonoBehaviour
         Zero = MtVImplementation.FindKernel("Zero");
         // set to nearest power of 2
         sdfResolution = Mathf.CeilToInt(Mathf.Pow(2, Mathf.Ceil(Mathf.Log(sdfResolution, 2))));
+        if (outputRenderTexture != null) outputRenderTexture.Release();
+        outputRenderTexture = null;
+        fieldsChanged = true;
     }
 
     private void Start() {
         if(mesh == null) {
             mesh = new Mesh();
         }
-
         skinnedMeshRenderer = skinnedMeshRenderer ?? GetComponent<SkinnedMeshRenderer>();
 
     }
 
     private void Update() {
+        if (!Application.IsPlaying(gameObject) && !executeInEditMode) return;
+
         float t = Time.time;
 
         Mesh mesh;
@@ -77,11 +98,15 @@ public class MeshToSDF : MonoBehaviour
             mesh = this.mesh;
         }
 
-        outputRenderTexture = MeshToVoxel(sdfResolution, mesh, offset, scaleBy, 
-            samplesPerTriangle, outputRenderTexture);
-    
-        FloodFillToSDF(outputRenderTexture);
-        
+        if(skinnedMeshRenderer || prevMesh != mesh || fieldsChanged) {
+            prevMesh = mesh;
+            fieldsChanged = false;
+            outputRenderTexture = MeshToVoxel(sdfResolution, mesh, offset, scaleBy,
+    samplesPerTriangle, outputRenderTexture);
+
+            FloodFillToSDF(outputRenderTexture);
+        }
+
         if (materialOutput) {
             if(!materialOutput.HasProperty(materialProperty)) {
                 Debug.LogError(string.Format("Material output doesn't have property {0}", materialProperty));
@@ -96,7 +121,6 @@ public class MeshToSDF : MonoBehaviour
             } else {
                 vfxOutput.SetTexture(vfxProperty, outputRenderTexture);
             }
-            
         }
     }
 
@@ -115,6 +139,10 @@ public class MeshToSDF : MonoBehaviour
                 numGroups(voxels.height, 8), numGroups(voxels.volumeDepth, 8));
 
         JFAImplementation.SetTexture(JFA, "Voxels", voxels);
+        
+        /*JFAImplementation.Dispatch(JFA, numGroups(voxels.width, 8),
+            numGroups(voxels.height, 8), numGroups(voxels.volumeDepth, 8)); */
+        
         for (int offset = voxels.width / 2; offset >= 1; offset /= 2) {
             JFAImplementation.SetInt("samplingOffset", offset);
             JFAImplementation.Dispatch(JFA, numGroups(voxels.width, 8),
@@ -143,6 +171,10 @@ public class MeshToSDF : MonoBehaviour
         }
     }
 
+    private Vector3 Div(Vector3 a, Vector3 b) {
+        return new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+    }
+
     public RenderTexture MeshToVoxel(int voxelResolution, Mesh mesh,
         Vector3 offset, float scaleMeshBy, uint numSamplesPerTriangle, 
         RenderTexture voxels = null) {
@@ -153,8 +185,15 @@ public class MeshToSDF : MonoBehaviour
         indicesBuffer.SetData(indicies);
 
         var vertexBuffer = cachedComputeBuffer(mesh.vertexCount, sizeof(float) * 3, 1);
-        vertexBuffer.SetData(mesh.vertices);
-
+        var verts = mesh.vertices;
+        if (skinnedMeshRenderer != null) {
+            var smr = skinnedMeshRenderer;
+            for (int i = 0; i < verts.Length; i++) {
+                verts[i] = Div(verts[i], smr.transform.lossyScale) - smr.rootBone.localPosition;
+            }
+        }
+        vertexBuffer.SetData(verts);
+        
         MtVImplementation.SetBuffer(MtV, "IndexBuffer", indicesBuffer);
         MtVImplementation.SetBuffer(MtV, "VertexBuffer", vertexBuffer);
         MtVImplementation.SetInt("tris", numTris);

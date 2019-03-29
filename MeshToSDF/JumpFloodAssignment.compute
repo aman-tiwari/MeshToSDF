@@ -3,6 +3,7 @@
 #pragma kernel Preprocess
 #pragma kernel Postprocess
 #pragma kernel DebugSphere
+#pragma kernel JFA64x64x64
 
 uint dispatchCubeSide;
 uint samplingOffset;
@@ -67,11 +68,10 @@ void DebugSphere(uint3 id : SV_DispatchThreadID) {
 }
 
 
-/*[numthreads(64, 64, 64)]
+[numthreads(8, 8, 8)]
 void JFA64x64x64(uint3 id : SV_DispatchThreadID) {
-	// offset = n/2;
 	for (uint offset = 32; offset >= 1; offset /= 2) {
 		JFAIter(offset, id);
 		DeviceMemoryBarrierWithGroupSync();
 	}
-}*/
+}

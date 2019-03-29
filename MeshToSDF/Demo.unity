@@ -261,7 +261,10 @@ VisualEffect:
     m_Vector2f:
       m_Array: []
     m_Vector3f:
-      m_Array: []
+      m_Array:
+      - m_Value: {x: 0, y: 0, z: 0}
+        m_Name: Pos
+        m_Overridden: 0
     m_Vector4f:
       m_Array: []
     m_Uint:
@@ -276,9 +279,9 @@ VisualEffect:
       m_Array: []
     m_NamedObject:
       m_Array:
-      - m_Value: {fileID: 11700000, guid: 08937e3134903c5488be506a2dac71e9, type: 2}
-        m_Name: Left Texture3D
-        m_Overridden: 0
+      - m_Value: {fileID: 0}
+        m_Name: Texture3D
+        m_Overridden: 1
     m_Bool:
       m_Array: []
 --- !u!1 &1297089218
@@ -450,7 +453,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737579827}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.6, z: -1.57}
+  m_LocalPosition: {x: 0, y: 0.6, z: -2.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -689,107 +692,87 @@ MonoBehaviour:
   blockerSampleCount: 24
   filterSampleCount: 16
   minFilterSize: 0.00001
---- !u!1001 &8721075369558768626
+--- !u!1001 &4242929767730229102
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.26960185
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.49223647
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 0.42633268
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961351, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531547, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961345, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531549, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: m_Name
       value: MeshToSDF
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531546, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
       propertyPath: vfxOutput
       value: 
       objectReference: {fileID: 929699365}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531546, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
-      propertyPath: vfxProperty
-      value: Left Texture3D
+      propertyPath: executeInEditMode
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
+    - target: {fileID: 4242929766940531546, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
         type: 3}
-      propertyPath: offset.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
-        type: 3}
-      propertyPath: offset.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
-        type: 3}
-      propertyPath: offset.z
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
-        type: 3}
-      propertyPath: scaleBy
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8721075370882961350, guid: fc903cbce6bde3d4c8a4c93d2742bcdf,
-        type: 3}
-      propertyPath: samplesPerTriangle
-      value: 20
+      propertyPath: fieldsChanged
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fc903cbce6bde3d4c8a4c93d2742bcdf, type: 3}

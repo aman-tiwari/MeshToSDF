@@ -9,7 +9,7 @@ See the `MeshToSDF/Demo.unity` scene to see how to use.
 4. Outputs:
     1. **VFX graph output** - set the `Vfx Output` field to a VFX graph and the `Vfx Property` to an exposed Texture3D parameter of the VFX graph
     2. **Material output** - same as vfx graph output, but with a material. There's a `Slice Texture 3D` material in the `Editor` folder that can be used to debug the SDF. Put it on a plane and put it in to the Material output property to see a slice of the SDF.
-    3. **Script output** - the SDF is available on the `outputRenderTexture` field of the component. The distance is stored in a RGBAFloat texture, in the RGB channels.
+    3. **Script output** - the SDF is available on the `outputRenderTexture` field of the component. The distance is stored in a RGBAFloat texture, in the RGB channels. Note that if you update the `offset` or `scale` or `sdfResolution` fields in a build, you also have to set `meshToSdfComponent.fieldsChanged = true`
 
 
 # How it works

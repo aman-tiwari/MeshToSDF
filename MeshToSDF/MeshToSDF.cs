@@ -15,7 +15,7 @@ public class MeshToSDF : MonoBehaviour
     public RenderTexture outputRenderTexture;
 
     [Tooltip("Mesh to convert to SDF. One of Mesh or Skinned Mesh Renderer must be set")]
-    public Mesh mesh;
+    public Mesh staticMesh;
 
     [Tooltip("Skinned mesh renderer to bake mesh from before converting to SDF.")]
     public SkinnedMeshRenderer skinnedMeshRenderer;
@@ -45,6 +45,7 @@ public class MeshToSDF : MonoBehaviour
     public uint samplesPerTriangle = 10;
     [Tooltip("Thicken the signed distance field by this amount")]
     public float postProcessThickness = 0.01f;
+
 
     Mesh prevMesh;
 
@@ -78,8 +79,8 @@ public class MeshToSDF : MonoBehaviour
     }
 
     private void Start() {
-        if(mesh == null) {
-            mesh = new Mesh();
+        if(staticMesh == null) {
+            staticMesh = new Mesh();
         }
         skinnedMeshRenderer = skinnedMeshRenderer ?? GetComponent<SkinnedMeshRenderer>();
 
@@ -90,21 +91,22 @@ public class MeshToSDF : MonoBehaviour
 
         float t = Time.time;
 
-        Mesh mesh;
+        Mesh _mesh;
         if (skinnedMeshRenderer) {
-            mesh = new Mesh();
-            skinnedMeshRenderer.BakeMesh(mesh);
+            _mesh = new Mesh();
+            skinnedMeshRenderer.BakeMesh(_mesh);
         } else {
-            mesh = this.mesh;
+            _mesh = this.staticMesh;
         }
 
-        if(skinnedMeshRenderer || prevMesh != mesh || fieldsChanged) {
-            prevMesh = mesh;
+        if(skinnedMeshRenderer || prevMesh != staticMesh || fieldsChanged) {
+            prevMesh = _mesh;
             fieldsChanged = false;
-            outputRenderTexture = MeshToVoxel(sdfResolution, mesh, offset, scaleBy,
+            outputRenderTexture = MeshToVoxel(sdfResolution, _mesh, offset, scaleBy,
     samplesPerTriangle, outputRenderTexture);
 
             FloodFillToSDF(outputRenderTexture);
+            DestroyImmediate(_mesh);
         }
 
         if (materialOutput) {
